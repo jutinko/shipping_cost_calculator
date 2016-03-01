@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/jutinko/go_practice/shipping_cost_calculator/calculator"
+	"github.com/jutinko/shipping_cost_calculator/calculator"
 )
 
 var weight = flag.Float64(
