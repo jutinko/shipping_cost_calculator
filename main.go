@@ -14,7 +14,7 @@ var weight = flag.Float64(
 )
 
 func main() {
-	calculator := &calculator.Calculator{}
-	cost := calculator.Calculate(*weight)
+	calculator := &calculator.FiveOneParcelCalculator{}
+	cost := calculator.CalculateCoreCost(*weight)
 	fmt.Printf("%f", cost)
 }
