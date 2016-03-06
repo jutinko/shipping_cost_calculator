@@ -78,7 +78,7 @@ var _ = Describe("51_parcel_calculator", func() {
 
 		Context("when the real cost is higher", func() {
 			It("should honor the real cost", func() {
-				parcel = utilities.NewParcel(utilities.Weight(6), utilities.Length(32), utilities.Length(12), utilities.Length(24))
+				parcel = utilities.NewParcel(utilities.Weight(6), utilities.Volume(32*12*24))
 
 				price := calc.Calculate(parcel)
 				Expect(price).Should(BeNumerically("==", 25.99+calculator.PickUpCost))
@@ -87,7 +87,7 @@ var _ = Describe("51_parcel_calculator", func() {
 
 		Context("when the volumetric cost is higher", func() {
 			It("should honor the volumetric cost", func() {
-				parcel = utilities.NewParcel(utilities.Weight(6), utilities.Length(62), utilities.Length(42), utilities.Length(24))
+				parcel = utilities.NewParcel(utilities.Weight(6), utilities.Volume(62*42*24))
 
 				price := calc.Calculate(parcel)
 				Expect(price).Should(BeNumerically("==", 35.94+calculator.PickUpCost))
