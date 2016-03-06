@@ -1,20 +1,29 @@
 package main
 
 import (
-	"flag"
-	"fmt"
+	"os"
 
 	"github.com/jutinko/shipping_cost_calculator/calculator"
-)
-
-var weight = flag.Float64(
-	"weight",
-	0,
-	"the weight of the parcel",
+	"github.com/jutinko/shipping_cost_calculator/product_store"
+	"github.com/jutinko/shipping_cost_calculator/utilities"
 )
 
 func main() {
-	calculator := &calculator.FiveOneParcelCalculator{}
-	cost := calculator.CalculateCoreCost(*weight)
-	fmt.Printf("%f", cost)
+	shippingCalculator := &calculator.FiveOneParcelCalculator{}
+
+	productStore := &product_store.ProductStore{}
+
+	orderCalculator := calculator.NewOrderCalculator(productStore, shippingCalculator, currencyConverter)
+}
+
+func initProductStore(productStore *product_store.ProductStore) {
+	products, err := utilities.ParseFile("data/redisImport.csv")
+	if err != nil {
+		println(err)
+		os.Exit(1)
+	}
+
+	for _, product := range products {
+		productStore.Put(product.Sku, product)
+	}
 }

@@ -9,15 +9,6 @@ import (
 	"strings"
 )
 
-type Product struct {
-	Sku        int
-	Name       string
-	Weight     Weight  // in kg
-	Volume     Volume  // in cm^3
-	WholePrice float64 // in gbp
-	Price      float64 // in gbp
-}
-
 func Parse(data string) (*Product, error) {
 	fields := strings.Split(data, ",")
 	if len(fields) < 6 {
