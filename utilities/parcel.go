@@ -11,6 +11,7 @@ type Parcel struct {
 
 type Weight float64
 type Length float64
+type Volume float64
 
 func NewParcel(weight Weight, a, b, c Length) *Parcel {
 	dim := []float64{float64(a), float64(b), float64(c)}
@@ -24,6 +25,6 @@ func NewParcel(weight Weight, a, b, c Length) *Parcel {
 	}
 }
 
-func (p *Parcel) Volume() float64 {
-	return float64(p.length * p.height * p.width)
+func (p *Parcel) Volume() Volume {
+	return Volume(p.length * p.height * p.width)
 }
