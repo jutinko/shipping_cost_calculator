@@ -2,13 +2,13 @@ package calculator
 
 import "github.com/jutinko/shipping_cost_calculator/utilities"
 
-const volumetricConversion float64 = 5000
+const volumetricConversion utilities.Volume = 5000
 const PickUpCost float64 = 5
 
 type FiveOneParcelCalculator struct{}
 
 func (c *FiveOneParcelCalculator) Calculate(p *utilities.Parcel) float64 {
-	volumetricWeight := p.Volume() / volumetricConversion
+	volumetricWeight := float64(p.Volume / volumetricConversion)
 	if volumetricWeight > float64(p.Weight) {
 		return c.CalculateCoreCost(volumetricWeight) + PickUpCost
 	} else {
