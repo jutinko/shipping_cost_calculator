@@ -1,30 +1,16 @@
 package utilities
 
-import "sort"
-
 type Parcel struct {
 	Weight Weight
-	length Length
-	height Length
-	width  Length
+	Volume Volume
 }
 
 type Weight float64
-type Length float64
 type Volume float64
 
-func NewParcel(weight Weight, a, b, c Length) *Parcel {
-	dim := []float64{float64(a), float64(b), float64(c)}
-
-	sort.Float64s(dim)
+func NewParcel(weight Weight, volume Volume) *Parcel {
 	return &Parcel{
 		Weight: weight,
-		length: Length(dim[2]),
-		height: Length(dim[1]),
-		width:  Length(dim[0]),
+		Volume: volume,
 	}
-}
-
-func (p *Parcel) Volume() Volume {
-	return Volume(p.length * p.height * p.width)
 }
