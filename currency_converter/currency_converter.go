@@ -1,54 +1,37 @@
-package main
+package currency_converter
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 
 	"github.com/jutinko/shipping_cost_calculator/utilities"
 )
 
-const FIXERIO string = "https://api.fixer.io/latest?base=GBP&symbols=CNY"
-const BACKOFFRATE float64 = 0.95
+const BACKOFFRATE float64 = 9.5
 
-func Exchange(pounds float64) float64 {
-	return pounds * getRate()
+type CurrencyConverter struct {
+	Api string
 }
 
-func getRate() float64 {
-	// Url, err := url.Parse(serverbase)
-	// if err != nil {
-	// 	fmt.Printf("Parse failed: %s", err)
-	// 	os.Exit(1)
-	// }
+func (c *CurrencyConverter) Exchange(pounds float64) float64 {
+	return pounds * c.getRate()
+}
 
-	// Url.Path += "requestpair/"
-	// params := url.Values{}
-	// params.Add("name", name)
-	// params.Add("location", location)
-	// Url.RawQuery = params.Encode()
-	response, err := http.Get(FIXERIO)
-
+func (c *CurrencyConverter) getRate() float64 {
+	response, err := http.Get(c.Api)
 	if err != nil {
-		fmt.Printf("Get failed: %s", err)
-		os.Exit(1)
-	} else {
-		defer response.Body.Close()
-		contents, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			fmt.Printf("Read content failed: %s", err)
-			os.Exit(1)
-		}
-
-		var rate utilities.ForexRate
-		json.Unmarshal(contents, &rate)
-		fmt.Printf("%+v\n", rate.Rates["CNY"])
+		return BACKOFFRATE
 	}
-	return 0
-}
 
-func main() {
-	getRate()
+	defer response.Body.Close()
+	// untested code!
+	contents, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return BACKOFFRATE
+	}
+
+	var rate utilities.ForexRate
+	json.Unmarshal(contents, &rate)
+	return rate.Rates["CNY"]
 }
