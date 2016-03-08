@@ -10,6 +10,12 @@ type ProductStore struct {
 	Table map[int]*utilities.Product
 }
 
+func NewProductStore() *ProductStore {
+	return &ProductStore{
+		Table: make(map[int]*utilities.Product),
+	}
+}
+
 func (p *ProductStore) Put(sku int, product *utilities.Product) {
 	p.Table[sku] = product
 }

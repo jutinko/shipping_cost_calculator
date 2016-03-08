@@ -49,6 +49,7 @@ func Parse(data string) (*Product, error) {
 
 func ParseFile(filename string) ([]*Product, error) {
 	file, err := os.Open(filename)
+	defer file.Close()
 	if err != nil {
 		return nil, err
 	}
