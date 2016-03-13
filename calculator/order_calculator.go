@@ -20,8 +20,8 @@ type CurrencyConverter interface {
 }
 
 type ProductOrder struct {
-	Sku      int
-	Quantity int
+	Sku      int `json:"sku,string"`
+	Quantity int `json:"quantity,string"`
 }
 
 func NewProductOrder(sku, quantity int) *ProductOrder {

@@ -13,10 +13,6 @@ import (
 	"github.com/jutinko/shipping_cost_calculator/utilities"
 )
 
-func PriceHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(mux.Vars(r)["sku"]))
-}
-
 func main() {
 	shippingCalculator := &calculator.FiveOneParcelCalculator{}
 
@@ -27,11 +23,11 @@ func main() {
 		Api: "https://api.fixer.io/latest?base=GBP&symbols=CNY",
 	}
 
-	calculator.NewOrderCalculator(productStore, shippingCalculator, currencyConverter)
+	orderCalculator := calculator.NewOrderCalculator(productStore, shippingCalculator, currencyConverter)
 
 	router := mux.NewRouter()
 	router.
-		HandleFunc("/get_order_price/{sku:[0-9]+}/{quantity:[0-9]+}", PriceHandler)
+		HandleFunc("/get_order_price", OrderListRequestHandler(orderCalculator.GetPrice)).Methods("POST")
 
 	if err := http.ListenAndServe(fmt.Sprintf(":%v", getPort()), router); err != nil {
 		log.Fatalln(err)
@@ -47,7 +43,7 @@ func getPort() string {
 }
 
 func initProductStore(productStore *product_store.ProductStore) {
-	products, err := utilities.ParseFile("data/redisImport.csv")
+	products, err := utilities.ParseFile("data/prices.csv")
 	if err != nil {
 		println(err.Error())
 		os.Exit(1)

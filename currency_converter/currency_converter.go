@@ -9,6 +9,7 @@ import (
 )
 
 const BACKOFFRATE float64 = 9.5
+const EXTRARATE float64 = 0.2
 
 type CurrencyConverter struct {
 	Api string
@@ -33,5 +34,5 @@ func (c *CurrencyConverter) getRate() float64 {
 
 	var rate utilities.ForexRate
 	json.Unmarshal(contents, &rate)
-	return rate.Rates["CNY"]
+	return rate.Rates["CNY"] + EXTRARATE
 }
