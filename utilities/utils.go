@@ -29,3 +29,10 @@ type ForexRate struct {
 	Date  string
 	Rates map[string]float64
 }
+
+type Price struct {
+	EUR float64
+	GBP float64
+	USD float64
+	RMB float64
+}

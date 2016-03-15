@@ -16,7 +16,7 @@ type ShippingCalculator interface {
 
 //go:generate counterfeiter -o fakes/FakeCurrencyConverter.go . CurrencyConverter
 type CurrencyConverter interface {
-	Exchange(float64) float64
+	Exchange(float64) *utilities.Price
 }
 
 type ProductOrder struct {
@@ -45,7 +45,7 @@ func NewOrderCalculator(productStore ProductStore, shippingCalculator ShippingCa
 	}
 }
 
-func (o *OrderCalculator) GetPrice(orders []*ProductOrder) (float64, error) {
+func (o *OrderCalculator) GetPrice(orders []*ProductOrder) (*utilities.Price, error) {
 	var (
 		price         float64
 		wholePrice    float64
@@ -58,7 +58,7 @@ func (o *OrderCalculator) GetPrice(orders []*ProductOrder) (float64, error) {
 	for _, order := range orders {
 		product, err := o.productStore.Get(order.Sku)
 		if err != nil {
-			return 0, err
+			return nil, err
 		}
 
 		multiplier = float64(order.Quantity)

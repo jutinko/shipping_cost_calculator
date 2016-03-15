@@ -20,7 +20,7 @@ func main() {
 	initProductStore(productStore)
 
 	currencyConverter := &currency_converter.CurrencyConverter{
-		Api: "https://api.fixer.io/latest?base=GBP&symbols=CNY",
+		Api: "https://api.fixer.io/latest?base=GBP",
 	}
 
 	orderCalculator := calculator.NewOrderCalculator(productStore, shippingCalculator, currencyConverter)

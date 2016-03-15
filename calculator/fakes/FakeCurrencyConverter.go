@@ -5,20 +5,21 @@ import (
 	"sync"
 
 	"github.com/jutinko/shipping_cost_calculator/calculator"
+	"github.com/jutinko/shipping_cost_calculator/utilities"
 )
 
 type FakeCurrencyConverter struct {
-	ExchangeStub        func(float64) float64
+	ExchangeStub        func(float64) *utilities.Price
 	exchangeMutex       sync.RWMutex
 	exchangeArgsForCall []struct {
 		arg1 float64
 	}
 	exchangeReturns struct {
-		result1 float64
+		result1 *utilities.Price
 	}
 }
 
-func (fake *FakeCurrencyConverter) Exchange(arg1 float64) float64 {
+func (fake *FakeCurrencyConverter) Exchange(arg1 float64) *utilities.Price {
 	fake.exchangeMutex.Lock()
 	fake.exchangeArgsForCall = append(fake.exchangeArgsForCall, struct {
 		arg1 float64
@@ -43,10 +44,10 @@ func (fake *FakeCurrencyConverter) ExchangeArgsForCall(i int) float64 {
 	return fake.exchangeArgsForCall[i].arg1
 }
 
-func (fake *FakeCurrencyConverter) ExchangeReturns(result1 float64) {
+func (fake *FakeCurrencyConverter) ExchangeReturns(result1 *utilities.Price) {
 	fake.ExchangeStub = nil
 	fake.exchangeReturns = struct {
-		result1 float64
+		result1 *utilities.Price
 	}{result1}
 }
 

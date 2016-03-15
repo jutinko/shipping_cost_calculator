@@ -29,7 +29,7 @@ var _ = Describe("ProductStore", func() {
 		Context("when the sku does not exist", func() {
 			It("returns an error", func() {
 				_, err := productStore.Get(321)
-				Expect(err).To(MatchError("no-product"))
+				Expect(err).To(MatchError("no-product: 321"))
 			})
 		})
 	})

@@ -91,7 +91,15 @@ var _ = Describe("OrderCalculator", func() {
 
 		It("returns the price in the desired currency", func() {
 			orders = append(orders, NewProductOrder(20, 2))
-			fakeCurrencyConverter.ExchangeReturns(1314)
+			fakePrice := &utilities.Price{
+				EUR: 1,
+				GBP: 2,
+				USD: 3,
+				RMB: 4,
+			}
+
+			fakeCurrencyConverter.ExchangeReturns(fakePrice)
+
 			fakeProductStore.GetReturns(&utilities.Product{
 				Sku:    20,
 				Price:  14.4,
@@ -101,7 +109,7 @@ var _ = Describe("OrderCalculator", func() {
 
 			price, err := orderCalculator.GetPrice(orders)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(price).To(BeNumerically("==", 1314))
+			Expect(price).To(Equal(fakePrice))
 		})
 
 		Context("when there are multiple orders", func() {
@@ -125,10 +133,18 @@ var _ = Describe("OrderCalculator", func() {
 
 			Context("when the order list is empty", func() {
 				It("should return 0", func() {
+					fakePrice := &utilities.Price{
+						EUR: 0,
+						GBP: 0,
+						USD: 0,
+						RMB: 0,
+					}
+					fakeCurrencyConverter.ExchangeReturns(fakePrice)
+
 					price, err := orderCalculator.GetPrice(orders)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(fakeProductStore.GetCallCount()).To(Equal(0))
-					Expect(price).To(BeNumerically("==", 0))
+					Expect(price).To(Equal(&utilities.Price{}))
 				})
 			})
 

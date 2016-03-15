@@ -3,12 +3,12 @@ package main
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/jutinko/shipping_cost_calculator/calculator"
+	"github.com/jutinko/shipping_cost_calculator/utilities"
 )
 
-type OrderListRequestCalculator func([]*calculator.ProductOrder) (float64, error)
+type OrderListRequestCalculator func([]*calculator.ProductOrder) (*utilities.Price, error)
 
 func OrderListRequestHandler(calc OrderListRequestCalculator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -25,13 +25,19 @@ func OrderListRequestHandler(calc OrderListRequestCalculator) http.HandlerFunc {
 			return
 		}
 
+		w.WriteHeader(200)
 		price, err := calc(orders)
 		if err != nil {
-			w.WriteHeader(500)
+			result, _ := json.Marshal(err.Error())
+			w.Write(result)
 			return
 		}
 
-		w.WriteHeader(200)
-		w.Write([]byte(strconv.FormatFloat(price, 'f', 2, 64)))
+		w.Write(convPrice(price))
 	}
+}
+
+func convPrice(price *utilities.Price) []byte {
+	result, _ := json.Marshal(price)
+	return result
 }

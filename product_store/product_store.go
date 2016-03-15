@@ -2,6 +2,7 @@ package product_store
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/jutinko/shipping_cost_calculator/utilities"
 )
@@ -24,5 +25,5 @@ func (p *ProductStore) Get(sku int) (*utilities.Product, error) {
 	if val, ok := p.Table[sku]; ok {
 		return val, nil
 	}
-	return nil, errors.New("no-product")
+	return nil, errors.New(fmt.Sprintf("no-product: %d", sku))
 }
