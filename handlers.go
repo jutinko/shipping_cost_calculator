@@ -8,7 +8,7 @@ import (
 	"github.com/jutinko/shipping_cost_calculator/utilities"
 )
 
-type OrderListRequestCalculator func([]*calculator.ProductOrder) (*utilities.Price, error)
+type OrderListRequestCalculator func([]*calculator.ProductOrder) (*utilities.FinalPrice, error)
 
 func OrderListRequestHandler(calc OrderListRequestCalculator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +37,7 @@ func OrderListRequestHandler(calc OrderListRequestCalculator) http.HandlerFunc {
 	}
 }
 
-func convPrice(price *utilities.Price) []byte {
+func convPrice(price *utilities.FinalPrice) []byte {
 	result, _ := json.Marshal(price)
 	return result
 }

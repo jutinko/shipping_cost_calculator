@@ -1,6 +1,10 @@
 package calculator
 
-import "github.com/jutinko/shipping_cost_calculator/utilities"
+import (
+	"strconv"
+
+	"github.com/jutinko/shipping_cost_calculator/utilities"
+)
 
 const WholesaleThreshhold int = 15
 
@@ -45,7 +49,7 @@ func NewOrderCalculator(productStore ProductStore, shippingCalculator ShippingCa
 	}
 }
 
-func (o *OrderCalculator) GetPrice(orders []*ProductOrder) (*utilities.Price, error) {
+func (o *OrderCalculator) GetPrice(orders []*ProductOrder) (*utilities.FinalPrice, error) {
 	var (
 		price         float64
 		wholePrice    float64
@@ -53,7 +57,11 @@ func (o *OrderCalculator) GetPrice(orders []*ProductOrder) (*utilities.Price, er
 		volume        float64
 		totalQuantity int
 		multiplier    float64
+		exchange      *utilities.Price
 	)
+
+	simpleOrders := []*utilities.SimpleOrder{}
+	simpleOrdersWhole := []*utilities.SimpleOrder{}
 
 	for _, order := range orders {
 		product, err := o.productStore.Get(order.Sku)
@@ -66,6 +74,21 @@ func (o *OrderCalculator) GetPrice(orders []*ProductOrder) (*utilities.Price, er
 		volume = volume + float64(product.Volume)*multiplier
 		price = price + product.Price*multiplier
 		wholePrice = wholePrice + product.WholePrice*multiplier
+
+		simpleOrders = append(simpleOrders, &utilities.SimpleOrder{
+			Sku:       product.Sku,
+			Quantity:  order.Quantity,
+			Name:      product.Name,
+			SellPrice: product.Price,
+		})
+
+		simpleOrdersWhole = append(simpleOrdersWhole, &utilities.SimpleOrder{
+			Sku:       product.Sku,
+			Quantity:  order.Quantity,
+			Name:      product.Name,
+			SellPrice: product.WholePrice,
+		})
+
 		totalQuantity = totalQuantity + order.Quantity
 	}
 
@@ -76,7 +99,32 @@ func (o *OrderCalculator) GetPrice(orders []*ProductOrder) (*utilities.Price, er
 		})
 
 	if totalQuantity < WholesaleThreshhold {
-		return o.currencyConverter.Exchange(shippingBit + price), nil
+		exchange = o.currencyConverter.Exchange(shippingBit + price)
+	} else {
+		exchange = o.currencyConverter.Exchange(shippingBit + wholePrice)
 	}
-	return o.currencyConverter.Exchange(shippingBit + wholePrice), nil
+
+	return &utilities.FinalPrice{
+		Orders:   simpleOrders,
+		Shipping: shippingBit,
+		Price:    formatPrice(exchange),
+	}, nil
+}
+
+func formatPrice(price *utilities.Price) *utilities.Price {
+	if price == nil {
+		return price
+	}
+
+	EUR, _ := strconv.ParseFloat(strconv.FormatFloat(price.EUR, 'f', 2, 64), 64)
+	GBP, _ := strconv.ParseFloat(strconv.FormatFloat(price.GBP, 'f', 2, 64), 64)
+	RMB, _ := strconv.ParseFloat(strconv.FormatFloat(price.RMB, 'f', 2, 64), 64)
+	USD, _ := strconv.ParseFloat(strconv.FormatFloat(price.USD, 'f', 2, 64), 64)
+
+	return &utilities.Price{
+		EUR: EUR,
+		GBP: GBP,
+		RMB: RMB,
+		USD: USD,
+	}
 }

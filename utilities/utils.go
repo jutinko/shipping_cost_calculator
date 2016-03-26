@@ -15,6 +15,13 @@ func NewParcel(weight Weight, volume Volume) *Parcel {
 	}
 }
 
+type SimpleOrder struct {
+	Sku       int
+	Quantity  int
+	Name      string
+	SellPrice float64
+}
+
 type Product struct {
 	Sku        int
 	Name       string
@@ -35,4 +42,10 @@ type Price struct {
 	GBP float64
 	USD float64
 	RMB float64
+}
+
+type FinalPrice struct {
+	Orders   []*SimpleOrder
+	Shipping float64
+	Price    *Price
 }

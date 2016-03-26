@@ -90,7 +90,24 @@ var _ = Describe("OrderCalculator", func() {
 		})
 
 		It("returns the price in the desired currency", func() {
-			orders = append(orders, NewProductOrder(20, 2))
+			orders = append(orders, NewProductOrder(3, 3))
+			orders = append(orders, NewProductOrder(4, 7))
+
+			fakeOrder := []*utilities.SimpleOrder{}
+			fakeOrder = append(fakeOrder, &utilities.SimpleOrder{
+				Sku:       3,
+				Quantity:  3,
+				Name:      "yoyobanana",
+				SellPrice: 2,
+			})
+
+			fakeOrder = append(fakeOrder, &utilities.SimpleOrder{
+				Sku:       4,
+				Quantity:  7,
+				Name:      "yyobanana",
+				SellPrice: 5,
+			})
+
 			fakePrice := &utilities.Price{
 				EUR: 1,
 				GBP: 2,
@@ -98,18 +115,40 @@ var _ = Describe("OrderCalculator", func() {
 				RMB: 4,
 			}
 
+			expectedPrice := &utilities.FinalPrice{
+				Orders:   fakeOrder,
+				Shipping: 0,
+				Price:    fakePrice,
+			}
+
 			fakeCurrencyConverter.ExchangeReturns(fakePrice)
 
-			fakeProductStore.GetReturns(&utilities.Product{
-				Sku:    20,
-				Price:  14.4,
-				Weight: 0.4,
-				Volume: 0.99,
-			}, nil)
+			fakeProductStore.GetStub = func(sku int) (*utilities.Product, error) {
+				if sku == 4 {
+					return &utilities.Product{
+						Sku:    4,
+						Name:   "yyobanana",
+						Price:  5,
+						Weight: 0.4,
+						Volume: 0.99,
+					}, nil
+				}
+				if sku == 3 {
+					return &utilities.Product{
+						Sku:    3,
+						Name:   "yoyobanana",
+						Price:  2,
+						Weight: 0.4,
+						Volume: 0.99,
+					}, nil
+				}
+
+				return nil, nil
+			}
 
 			price, err := orderCalculator.GetPrice(orders)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(price).To(Equal(fakePrice))
+			Expect(price).To(Equal(expectedPrice))
 		})
 
 		Context("when there are multiple orders", func() {
@@ -144,7 +183,10 @@ var _ = Describe("OrderCalculator", func() {
 					price, err := orderCalculator.GetPrice(orders)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(fakeProductStore.GetCallCount()).To(Equal(0))
-					Expect(price).To(Equal(&utilities.Price{}))
+					Expect(price).To(Equal(&utilities.FinalPrice{
+						Orders: []*utilities.SimpleOrder{},
+						Price:  &utilities.Price{},
+					}))
 				})
 			})
 

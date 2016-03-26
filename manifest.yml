@@ -1,5 +1,5 @@
 ---
 applications:
-  - name: ship
-    memory: 1024M
-    instances: 1
+  - name: shipapi
+    memory: 128M
+    instances: 10
