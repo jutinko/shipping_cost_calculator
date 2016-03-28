@@ -74,10 +74,11 @@ var _ = Describe("OrderCalculator", func() {
 		It("converts the price and the shipping price to the desired currency", func() {
 			orders = append(orders, NewProductOrder(20, 2))
 			fakeProductStore.GetReturns(&utilities.Product{
-				Sku:    20,
-				Price:  14.4,
-				Weight: 0.4,
-				Volume: 0.99,
+				Sku:        20,
+				Price:      14.4,
+				WholePrice: 0.33,
+				Weight:     0.4,
+				Volume:     0.99,
 			}, nil)
 
 			fakeShippingCalculator.CalculateReturns(20)
@@ -85,31 +86,50 @@ var _ = Describe("OrderCalculator", func() {
 			_, err := orderCalculator.GetPrice(orders)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeCurrencyConverter.ExchangeCallCount()).To(Equal(1))
-			Expect(fakeCurrencyConverter.ExchangeArgsForCall(0)).To(BeNumerically("==", 48.8))
+			Expect(fakeCurrencyConverter.ExchangeCallCount()).To(Equal(3))
+			Expect(fakeCurrencyConverter.ExchangeArgsForCall(0)).To(BeNumerically("==", 14.4))
+			Expect(fakeCurrencyConverter.ExchangeArgsForCall(1)).To(BeNumerically("==", 0.33))
+			Expect(fakeCurrencyConverter.ExchangeArgsForCall(2)).To(BeNumerically("==", 48.8))
 		})
 
 		It("returns the price in the desired currency", func() {
 			orders = append(orders, NewProductOrder(3, 3))
 			orders = append(orders, NewProductOrder(4, 7))
 
+			fakeSellPrice := &utilities.Price{
+				EUR: 1.00001,
+				GBP: 2,
+				USD: 3,
+				RMB: 1009,
+			}
+
 			fakeOrder := []*utilities.SimpleOrder{}
 			fakeOrder = append(fakeOrder, &utilities.SimpleOrder{
-				Sku:       3,
-				Quantity:  3,
-				Name:      "yoyobanana",
-				SellPrice: 2,
+				Sku:      3,
+				Quantity: 3,
+				Name:     "yoyobanana",
+				SellPrice: &utilities.Price{
+					EUR: 1,
+					GBP: 2,
+					USD: 3,
+					RMB: 1009,
+				},
 			})
 
 			fakeOrder = append(fakeOrder, &utilities.SimpleOrder{
-				Sku:       4,
-				Quantity:  7,
-				Name:      "yyobanana",
-				SellPrice: 5,
+				Sku:      4,
+				Quantity: 7,
+				Name:     "yyobanana",
+				SellPrice: &utilities.Price{
+					EUR: 1,
+					GBP: 2,
+					USD: 3,
+					RMB: 1009,
+				},
 			})
 
 			fakePrice := &utilities.Price{
-				EUR: 1,
+				EUR: 1.009,
 				GBP: 2,
 				USD: 3,
 				RMB: 4,
@@ -118,10 +138,21 @@ var _ = Describe("OrderCalculator", func() {
 			expectedPrice := &utilities.FinalPrice{
 				Orders:   fakeOrder,
 				Shipping: 0,
-				Price:    fakePrice,
+				Price: &utilities.Price{
+					EUR: 1.01,
+					GBP: 2,
+					USD: 3,
+					RMB: 4,
+				},
 			}
 
-			fakeCurrencyConverter.ExchangeReturns(fakePrice)
+			fakeCurrencyConverter.ExchangeStub = func(price float64) *utilities.Price {
+				if price == 5 || price == 2 {
+					return fakeSellPrice
+				} else {
+					return fakePrice
+				}
+			}
 
 			fakeProductStore.GetStub = func(sku int) (*utilities.Product, error) {
 				if sku == 4 {
@@ -230,8 +261,10 @@ var _ = Describe("OrderCalculator", func() {
 					_, err := orderCalculator.GetPrice(orders)
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(fakeCurrencyConverter.ExchangeCallCount()).To(Equal(1))
-					Expect(fakeCurrencyConverter.ExchangeArgsForCall(0)).To(BeNumerically("==", 69))
+					Expect(fakeCurrencyConverter.ExchangeCallCount()).To(Equal(33))
+					Expect(fakeCurrencyConverter.ExchangeArgsForCall(0)).To(BeNumerically("==", 14.4))
+					Expect(fakeCurrencyConverter.ExchangeArgsForCall(1)).To(BeNumerically("==", 1))
+					Expect(fakeCurrencyConverter.ExchangeArgsForCall(32)).To(BeNumerically("==", 69))
 				})
 			})
 		})

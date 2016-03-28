@@ -79,14 +79,14 @@ func (o *OrderCalculator) GetPrice(orders []*ProductOrder) (*utilities.FinalPric
 			Sku:       product.Sku,
 			Quantity:  order.Quantity,
 			Name:      product.Name,
-			SellPrice: product.Price,
+			SellPrice: formatPrice(o.currencyConverter.Exchange(product.Price)),
 		})
 
 		simpleOrdersWhole = append(simpleOrdersWhole, &utilities.SimpleOrder{
 			Sku:       product.Sku,
 			Quantity:  order.Quantity,
 			Name:      product.Name,
-			SellPrice: product.WholePrice,
+			SellPrice: formatPrice(o.currencyConverter.Exchange(product.WholePrice)),
 		})
 
 		totalQuantity = totalQuantity + order.Quantity

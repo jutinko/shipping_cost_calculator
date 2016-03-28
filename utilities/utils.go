@@ -19,7 +19,7 @@ type SimpleOrder struct {
 	Sku       int
 	Quantity  int
 	Name      string
-	SellPrice float64
+	SellPrice *Price
 }
 
 type Product struct {
