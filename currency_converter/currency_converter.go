@@ -19,22 +19,32 @@ var BACKOFFRATE = map[string]float64{
 const EXTRARATE float64 = 1.04
 
 type CurrencyConverter struct {
-	Api string
+	Api   string
+	rates map[string]float64
 }
 
-func (c *CurrencyConverter) Exchange(pounds float64) *utilities.Price {
-	rates := c.getRates()
-
-	return &utilities.Price{
-		EUR: pounds * rates["EUR"] * EXTRARATE,
-		GBP: pounds,
-		RMB: pounds * rates["CNY"] * EXTRARATE,
-		USD: pounds * rates["USD"] * EXTRARATE,
+func NewCurrencyConverter(api string) *CurrencyConverter {
+	return &CurrencyConverter{
+		Api:   api,
+		rates: getRates(api),
 	}
 }
 
-func (c *CurrencyConverter) getRates() map[string]float64 {
-	response, err := http.Get(c.Api)
+func (c *CurrencyConverter) NewRates() {
+	c.rates = getRates(c.Api)
+}
+
+func (c *CurrencyConverter) Exchange(pounds float64) *utilities.Price {
+	return &utilities.Price{
+		EUR: pounds * c.rates["EUR"] * EXTRARATE,
+		GBP: pounds,
+		RMB: pounds * c.rates["CNY"] * EXTRARATE,
+		USD: pounds * c.rates["USD"] * EXTRARATE,
+	}
+}
+
+func getRates(api string) map[string]float64 {
+	response, err := http.Get(api)
 	if err != nil {
 		return BACKOFFRATE
 	}

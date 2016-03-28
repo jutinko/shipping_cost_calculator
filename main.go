@@ -19,9 +19,7 @@ func main() {
 	productStore := product_store.NewProductStore()
 	initProductStore(productStore)
 
-	currencyConverter := &currency_converter.CurrencyConverter{
-		Api: "https://api.fixer.io/latest?base=GBP",
-	}
+	currencyConverter := currency_converter.NewCurrencyConverter("https://api.fixer.io/latest?base=GBP")
 
 	orderCalculator := calculator.NewOrderCalculator(productStore, shippingCalculator, currencyConverter)
 

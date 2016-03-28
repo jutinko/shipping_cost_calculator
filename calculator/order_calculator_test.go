@@ -32,6 +32,12 @@ var _ = Describe("OrderCalculator", func() {
 	})
 
 	Describe("GetPrice", func() {
+		It("refreshes the conversion rates", func() {
+			_, err := orderCalculator.GetPrice(orders)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeCurrencyConverter.NewRatesCallCount()).To(Equal(1))
+		})
+
 		It("deligates the call to product store", func() {
 			orders = append(orders, NewProductOrder(20, 2))
 			fakeProductStore.GetReturns(&utilities.Product{

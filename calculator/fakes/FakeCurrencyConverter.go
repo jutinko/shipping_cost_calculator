@@ -17,6 +17,9 @@ type FakeCurrencyConverter struct {
 	exchangeReturns struct {
 		result1 *utilities.Price
 	}
+	NewRatesStub        func()
+	newRatesMutex       sync.RWMutex
+	newRatesArgsForCall []struct{}
 }
 
 func (fake *FakeCurrencyConverter) Exchange(arg1 float64) *utilities.Price {
@@ -49,6 +52,21 @@ func (fake *FakeCurrencyConverter) ExchangeReturns(result1 *utilities.Price) {
 	fake.exchangeReturns = struct {
 		result1 *utilities.Price
 	}{result1}
+}
+
+func (fake *FakeCurrencyConverter) NewRates() {
+	fake.newRatesMutex.Lock()
+	fake.newRatesArgsForCall = append(fake.newRatesArgsForCall, struct{}{})
+	fake.newRatesMutex.Unlock()
+	if fake.NewRatesStub != nil {
+		fake.NewRatesStub()
+	}
+}
+
+func (fake *FakeCurrencyConverter) NewRatesCallCount() int {
+	fake.newRatesMutex.RLock()
+	defer fake.newRatesMutex.RUnlock()
+	return len(fake.newRatesArgsForCall)
 }
 
 var _ calculator.CurrencyConverter = new(FakeCurrencyConverter)
