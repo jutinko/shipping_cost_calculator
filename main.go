@@ -41,13 +41,16 @@ func getPort() string {
 }
 
 func initProductStore(productStore *product_store.ProductStore) {
-	products, err := utilities.ParseFile("data/prices.csv")
-	if err != nil {
-		println(err.Error())
-		os.Exit(1)
-	}
+	priceLists := []string{"data/pricesNovember2015.csv", "data/pricesApril2016.csv"}
+	for _, priceList := range priceLists {
+		products, err := utilities.ParseFile(priceList)
+		if err != nil {
+			println(err.Error())
+			os.Exit(1)
+		}
 
-	for _, product := range products {
-		productStore.Put(product.Sku, product)
+		for _, product := range products {
+			productStore.Put(product.Sku, product)
+		}
 	}
 }

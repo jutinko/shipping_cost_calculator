@@ -63,8 +63,8 @@ func (o *OrderCalculator) GetPrice(orders []*ProductOrder) (*utilities.FinalPric
 		exchange      *utilities.Price
 	)
 
-	simpleOrders := []*utilities.SimpleOrder{}
-	simpleOrdersWhole := []*utilities.SimpleOrder{}
+	simpleOrders := make(map[int]*utilities.SimpleOrder)
+	simpleOrdersWhole := make(map[int]*utilities.SimpleOrder)
 
 	for _, order := range orders {
 		product, err := o.productStore.Get(order.Sku)
@@ -78,20 +78,39 @@ func (o *OrderCalculator) GetPrice(orders []*ProductOrder) (*utilities.FinalPric
 		price = price + product.Price*multiplier
 		wholePrice = wholePrice + product.WholePrice*multiplier
 
-		simpleOrders = append(simpleOrders, &utilities.SimpleOrder{
-			Sku:       product.Sku,
-			Quantity:  order.Quantity,
-			Name:      product.Name,
-			SellPrice: formatPrice(o.currencyConverter.Exchange(product.Price)),
-		})
+		i, ok := simpleOrders[product.Sku]
+		if !ok {
+			simpleOrders[product.Sku] = &utilities.SimpleOrder{
+				Sku:       product.Sku,
+				Quantity:  order.Quantity,
+				Name:      product.Name,
+				SellPrice: formatPrice(o.currencyConverter.Exchange(product.Price)),
+			}
+		} else {
+			simpleOrders[product.Sku] = &utilities.SimpleOrder{
+				Sku:       product.Sku,
+				Quantity:  i.Quantity + order.Quantity,
+				Name:      product.Name,
+				SellPrice: formatPrice(o.currencyConverter.Exchange(product.Price)),
+			}
+		}
 
-		simpleOrdersWhole = append(simpleOrdersWhole, &utilities.SimpleOrder{
-			Sku:       product.Sku,
-			Quantity:  order.Quantity,
-			Name:      product.Name,
-			SellPrice: formatPrice(o.currencyConverter.Exchange(product.WholePrice)),
-		})
-
+		i, ok = simpleOrdersWhole[product.Sku]
+		if !ok {
+			simpleOrdersWhole[product.Sku] = &utilities.SimpleOrder{
+				Sku:       product.Sku,
+				Quantity:  order.Quantity,
+				Name:      product.Name,
+				SellPrice: formatPrice(o.currencyConverter.Exchange(product.WholePrice)),
+			}
+		} else {
+			simpleOrdersWhole[product.Sku] = &utilities.SimpleOrder{
+				Sku:       product.Sku,
+				Quantity:  i.Quantity + order.Quantity,
+				Name:      product.Name,
+				SellPrice: formatPrice(o.currencyConverter.Exchange(product.WholePrice)),
+			}
+		}
 		totalQuantity = totalQuantity + order.Quantity
 	}
 
@@ -105,10 +124,16 @@ func (o *OrderCalculator) GetPrice(orders []*ProductOrder) (*utilities.FinalPric
 		exchange = o.currencyConverter.Exchange(shippingBit + price)
 	} else {
 		exchange = o.currencyConverter.Exchange(shippingBit + wholePrice)
+		simpleOrders = simpleOrdersWhole
+	}
+
+	simpleOrdersSlice := []*utilities.SimpleOrder{}
+	for _, value := range simpleOrders {
+		simpleOrdersSlice = append(simpleOrdersSlice, value)
 	}
 
 	return &utilities.FinalPrice{
-		Orders:   simpleOrders,
+		Orders:   simpleOrdersSlice,
 		Shipping: shippingBit,
 		Price:    formatPrice(exchange),
 	}, nil

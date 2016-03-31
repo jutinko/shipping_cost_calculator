@@ -247,8 +247,86 @@ var _ = Describe("OrderCalculator", func() {
 				Expect(fakeShippingCalculator.CalculateArgsForCall(0)).To(Equal(utilities.NewParcel(40, 40008)))
 			})
 
+			Context("when there are multiple order of the same product", func() {
+				It("should aggregate them in one order", func() {
+					orders = append(orders, NewProductOrder(20, 18))
+					orders = append(orders, NewProductOrder(20, 4))
+
+					fakeProductStore.GetReturns(&utilities.Product{
+						Sku:    20,
+						Price:  2,
+						Weight: 0.4,
+						Volume: 0.5,
+					}, nil)
+
+					price, err := orderCalculator.GetPrice(orders)
+					Expect(err).NotTo(HaveOccurred())
+
+					expectedPrice := &utilities.FinalPrice{
+						Orders: []*utilities.SimpleOrder{&utilities.SimpleOrder{
+							Sku:      20,
+							Quantity: 22,
+						}},
+					}
+
+					Expect(price).To(Equal(expectedPrice))
+				})
+			})
+
 			Context("when the order has more than 15 items", func() {
-				It("should use the wholesale price", func() {
+				It("should use the wholesale price in the final price", func() {
+					for i := 0; i < 15; i++ {
+						orders = append(orders, NewProductOrder(i, 2))
+					}
+					orders = append(orders, NewProductOrder(1, 19))
+
+					fakeProductStore.GetReturns(&utilities.Product{
+						Sku:        20,
+						WholePrice: 1,
+						Price:      14.4,
+						Weight:     0.4,
+						Volume:     0.99,
+					}, nil)
+
+					fakePrice := &utilities.Price{
+						EUR: 1,
+						GBP: 0,
+						USD: 0,
+						RMB: 0,
+					}
+
+					fakeCurrencyConverter.ExchangeStub = func(price float64) *utilities.Price {
+						if price == 1 {
+							return &utilities.Price{
+								EUR: 0.5,
+							}
+						} else {
+							return fakePrice
+						}
+					}
+
+					expectedPrice := &utilities.FinalPrice{
+						Orders: []*utilities.SimpleOrder{&utilities.SimpleOrder{
+							Sku:      20,
+							Quantity: 49,
+							SellPrice: &utilities.Price{
+								EUR: 0.5,
+							},
+						}},
+						Price: fakePrice,
+					}
+
+					price, err := orderCalculator.GetPrice(orders)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(fakeCurrencyConverter.ExchangeCallCount()).To(Equal(33))
+					Expect(fakeCurrencyConverter.ExchangeArgsForCall(0)).To(BeNumerically("==", 14.4))
+					Expect(fakeCurrencyConverter.ExchangeArgsForCall(1)).To(BeNumerically("==", 1))
+					Expect(fakeCurrencyConverter.ExchangeArgsForCall(32)).To(BeNumerically("==", 49))
+					Expect(price).To(Equal(expectedPrice))
+				})
+
+				It("should use the wholesale price in the orders", func() {
 					for i := 0; i < 15; i++ {
 						orders = append(orders, NewProductOrder(i, 2))
 					}
