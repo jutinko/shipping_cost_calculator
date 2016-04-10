@@ -2,4 +2,4 @@
 applications:
   - name: shipapi
     memory: 128M
-    instances: 10
+    instances: 3
