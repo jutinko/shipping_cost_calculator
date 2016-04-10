@@ -15,8 +15,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func stubbedOrderListRequestCalculator(price *utilities.Price, err error) OrderListRequestCalculator {
-	return func(_ []*calculator.ProductOrder) (*utilities.Price, error) {
+func stubbedOrderListRequestCalculator(price *utilities.FinalPrice, err error) OrderListRequestCalculator {
+	return func(_ []*calculator.ProductOrder) (*utilities.FinalPrice, error) {
 		return price, err
 	}
 }
@@ -36,32 +36,32 @@ var _ = Describe("Handlers", func() {
 
 	Describe("getting the final price", func() {
 		It("responds with 200", func() {
-			handle := OrderListRequestHandler(stubbedOrderListRequestCalculator(fakePrice, nil))
+			handle := OrderListRequestHandler(stubbedOrderListRequestCalculator(nil, nil))
 
 			resp := httptest.NewRecorder()
 			req, err := http.NewRequest(
 				"GET", "/get_order_price", singleOrder(),
 			)
+			Expect(err).NotTo(HaveOccurred())
 
 			handle(resp, req)
-
-			Expect(err).NotTo(HaveOccurred())
 			Expect(resp.Code).To(Equal(200))
 		})
 
 		Context("when the calculator returns an error", func() {
-			It("responds with 500", func() {
-				handle := OrderListRequestHandler(stubbedOrderListRequestCalculator(fakePrice, errors.New("bad sku")))
+			It("responds with the error", func() {
+				handle := OrderListRequestHandler(stubbedOrderListRequestCalculator(nil, errors.New("bad sku")))
 
 				resp := httptest.NewRecorder()
 				req, err := http.NewRequest(
 					"GET", "/get_order_price", singleOrder(),
 				)
+				Expect(err).NotTo(HaveOccurred())
 
 				handle(resp, req)
 
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resp.Code).To(Equal(500))
+				Expect(string(resp.Body.Bytes())).To(ContainSubstring("bad sku"))
+				Expect(resp.Code).To(Equal(200))
 			})
 		})
 
@@ -71,7 +71,7 @@ var _ = Describe("Handlers", func() {
 			}
 
 			It("responds with 500", func() {
-				handle := OrderListRequestHandler(stubbedOrderListRequestCalculator(fakePrice, nil))
+				handle := OrderListRequestHandler(stubbedOrderListRequestCalculator(nil, nil))
 
 				resp := httptest.NewRecorder()
 				req, err := http.NewRequest(

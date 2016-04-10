@@ -25,7 +25,7 @@ func main() {
 
 	router := mux.NewRouter()
 	router.
-		HandleFunc("/get_order_price", OrderListRequestHandler(orderCalculator.GetPrice)).Methods("POST")
+		HandleFunc("/get_order_price", OrderListRequestHandler(orderCalculator.GetPrice)).Methods("GET")
 
 	if err := http.ListenAndServe(fmt.Sprintf(":%v", getPort()), router); err != nil {
 		log.Fatalln(err)
