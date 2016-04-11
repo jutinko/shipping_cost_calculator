@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/garyburd/redigo/redis"
 	"github.com/gorilla/mux"
 	"github.com/jutinko/shipping_cost_calculator/calculator"
 	"github.com/jutinko/shipping_cost_calculator/currency_converter"
@@ -16,8 +17,18 @@ import (
 func main() {
 	shippingCalculator := &calculator.FiveOneParcelCalculator{}
 
-	productStore := product_store.NewProductStore()
-	initProductStore(productStore)
+	dialOption := redis.DialPassword("d7c2b08c-bc18-45d2-b728-d83ef331e72f")
+
+	client, err := redis.Dial("tcp", "192.168.8.153:46593", dialOption)
+	// client, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		panic(fmt.Errorf("failed to connect to redis: %s", err))
+	}
+
+	println("Connected to redis")
+
+	productStore := product_store.NewProductStore(client)
+	//initProductStore(productStore)
 
 	currencyConverter := currency_converter.NewCurrencyConverter("https://api.fixer.io/latest?base=GBP")
 
@@ -25,7 +36,7 @@ func main() {
 
 	router := mux.NewRouter()
 	router.
-		HandleFunc("/get_order_price", OrderListRequestHandler(orderCalculator.GetPrice)).Methods("GET")
+		HandleFunc("/get_order_price", OrderListRequestHandler(orderCalculator.GetPrice)).Methods("POST")
 
 	if err := http.ListenAndServe(fmt.Sprintf(":%v", getPort()), router); err != nil {
 		log.Fatalln(err)
@@ -50,7 +61,10 @@ func initProductStore(productStore *product_store.ProductStore) {
 		}
 
 		for _, product := range products {
-			productStore.Put(product.Sku, product)
+			err := productStore.Put(product.Sku, product)
+			if err != nil {
+				panic(fmt.Errorf("Failed to put %#v to store: %s", product, err))
+			}
 		}
 	}
 }

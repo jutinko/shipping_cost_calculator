@@ -3,3 +3,4 @@ applications:
   - name: shipapi
     memory: 128M
     instances: 3
+    enable-diego: true
