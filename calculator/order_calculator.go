@@ -51,13 +51,13 @@ func NewOrderCalculator(productStore ProductStore, shippingCalculator ShippingCa
 }
 
 func (o *OrderCalculator) GetPrice(orders []*ProductOrder) (*utilities.FinalPrice, error) {
+	// make sure we use the most up to date rates
 	o.currencyConverter.NewRates()
 
 	var (
 		price         float64
+		shipping      float64
 		wholePrice    float64
-		weight        float64
-		volume        float64
 		totalQuantity int
 		multiplier    float64
 		exchange      *utilities.Price
@@ -73,10 +73,13 @@ func (o *OrderCalculator) GetPrice(orders []*ProductOrder) (*utilities.FinalPric
 		}
 
 		multiplier = float64(order.Quantity)
-		weight = weight + float64(product.Weight)*multiplier
-		volume = volume + float64(product.Volume)*multiplier
-		price = price + product.Price*multiplier
-		wholePrice = wholePrice + product.WholePrice*multiplier
+		shipping = o.shippingCalculator.Calculate(&utilities.Parcel{
+			Weight: product.Weight,
+			Volume: product.Volume,
+		})
+
+		price = price + (product.Price+shipping)*multiplier
+		wholePrice = wholePrice + (product.WholePrice+shipping)*multiplier
 
 		i, ok := simpleOrders[product.Sku]
 		if !ok {
@@ -84,14 +87,14 @@ func (o *OrderCalculator) GetPrice(orders []*ProductOrder) (*utilities.FinalPric
 				Sku:       product.Sku,
 				Quantity:  order.Quantity,
 				Name:      product.Name,
-				SellPrice: formatPrice(o.currencyConverter.Exchange(product.Price)),
+				SellPrice: formatPrice(o.currencyConverter.Exchange(product.Price + shipping)),
 			}
 		} else {
 			simpleOrders[product.Sku] = &utilities.SimpleOrder{
 				Sku:       product.Sku,
 				Quantity:  i.Quantity + order.Quantity,
 				Name:      product.Name,
-				SellPrice: formatPrice(o.currencyConverter.Exchange(product.Price)),
+				SellPrice: formatPrice(o.currencyConverter.Exchange(product.Price + shipping)),
 			}
 		}
 
@@ -101,29 +104,23 @@ func (o *OrderCalculator) GetPrice(orders []*ProductOrder) (*utilities.FinalPric
 				Sku:       product.Sku,
 				Quantity:  order.Quantity,
 				Name:      product.Name,
-				SellPrice: formatPrice(o.currencyConverter.Exchange(product.WholePrice)),
+				SellPrice: formatPrice(o.currencyConverter.Exchange(product.WholePrice + shipping)),
 			}
 		} else {
 			simpleOrdersWhole[product.Sku] = &utilities.SimpleOrder{
 				Sku:       product.Sku,
 				Quantity:  i.Quantity + order.Quantity,
 				Name:      product.Name,
-				SellPrice: formatPrice(o.currencyConverter.Exchange(product.WholePrice)),
+				SellPrice: formatPrice(o.currencyConverter.Exchange(product.WholePrice + shipping)),
 			}
 		}
 		totalQuantity = totalQuantity + order.Quantity
 	}
 
-	shippingBit := o.shippingCalculator.Calculate(
-		&utilities.Parcel{
-			Weight: utilities.Weight(weight),
-			Volume: utilities.Volume(volume),
-		})
-
 	if totalQuantity < WholesaleThreshhold {
-		exchange = o.currencyConverter.Exchange(shippingBit + price)
+		exchange = o.currencyConverter.Exchange(price)
 	} else {
-		exchange = o.currencyConverter.Exchange(shippingBit + wholePrice)
+		exchange = o.currencyConverter.Exchange(wholePrice)
 		simpleOrders = simpleOrdersWhole
 	}
 
@@ -133,9 +130,8 @@ func (o *OrderCalculator) GetPrice(orders []*ProductOrder) (*utilities.FinalPric
 	}
 
 	return &utilities.FinalPrice{
-		Orders:   simpleOrdersSlice,
-		Shipping: shippingBit,
-		Price:    formatPrice(exchange),
+		Orders: simpleOrdersSlice,
+		Price:  formatPrice(exchange),
 	}, nil
 }
 

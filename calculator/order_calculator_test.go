@@ -62,7 +62,7 @@ var _ = Describe("OrderCalculator", func() {
 			})
 		})
 
-		It("packages the product to a parcel for shipping calculator", func() {
+		It("packages the product to an indivitual parcel for shipping calculator", func() {
 			orders = append(orders, NewProductOrder(20, 2))
 			fakeProductStore.GetReturns(&utilities.Product{
 				Sku:    20,
@@ -74,7 +74,7 @@ var _ = Describe("OrderCalculator", func() {
 			_, err := orderCalculator.GetPrice(orders)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(fakeShippingCalculator.CalculateCallCount()).To(Equal(1))
-			Expect(fakeShippingCalculator.CalculateArgsForCall(0)).To(Equal(utilities.NewParcel(0.8, 1.98)))
+			Expect(fakeShippingCalculator.CalculateArgsForCall(0)).To(Equal(utilities.NewParcel(0.4, 0.99)))
 		})
 
 		It("converts the price and the shipping price to the desired currency", func() {
@@ -93,9 +93,9 @@ var _ = Describe("OrderCalculator", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeCurrencyConverter.ExchangeCallCount()).To(Equal(3))
-			Expect(fakeCurrencyConverter.ExchangeArgsForCall(0)).To(BeNumerically("==", 14.4))
-			Expect(fakeCurrencyConverter.ExchangeArgsForCall(1)).To(BeNumerically("==", 0.33))
-			Expect(fakeCurrencyConverter.ExchangeArgsForCall(2)).To(BeNumerically("==", 48.8))
+			Expect(fakeCurrencyConverter.ExchangeArgsForCall(0)).To(BeNumerically("==", 34.4))
+			Expect(fakeCurrencyConverter.ExchangeArgsForCall(1)).To(BeNumerically("==", 20.33))
+			Expect(fakeCurrencyConverter.ExchangeArgsForCall(2)).To(BeNumerically("==", 68.8))
 		})
 
 		It("returns the price in the desired currency", func() {
@@ -227,26 +227,6 @@ var _ = Describe("OrderCalculator", func() {
 				})
 			})
 
-			It("packages the products to a single parcel for shipping calculator", func() {
-				orders = append(orders, NewProductOrder(20, 2))
-				orders = append(orders, NewProductOrder(1, 4))
-
-				fakeProductStore.GetStub = func(sku int) (*utilities.Product, error) {
-					if sku == 20 {
-						return &utilities.Product{Weight: 2, Volume: 4}, nil
-					} else if sku == 1 {
-						return &utilities.Product{Weight: 9, Volume: 10000}, nil
-					}
-
-					return nil, nil
-				}
-
-				_, err := orderCalculator.GetPrice(orders)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(fakeShippingCalculator.CalculateCallCount()).To(Equal(1))
-				Expect(fakeShippingCalculator.CalculateArgsForCall(0)).To(Equal(utilities.NewParcel(40, 40008)))
-			})
-
 			Context("when there are multiple order of the same product", func() {
 				It("should aggregate them in one order", func() {
 					orders = append(orders, NewProductOrder(20, 18))
@@ -346,9 +326,9 @@ var _ = Describe("OrderCalculator", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(fakeCurrencyConverter.ExchangeCallCount()).To(Equal(33))
-					Expect(fakeCurrencyConverter.ExchangeArgsForCall(0)).To(BeNumerically("==", 14.4))
-					Expect(fakeCurrencyConverter.ExchangeArgsForCall(1)).To(BeNumerically("==", 1))
-					Expect(fakeCurrencyConverter.ExchangeArgsForCall(32)).To(BeNumerically("==", 69))
+					Expect(fakeCurrencyConverter.ExchangeArgsForCall(0)).To(BeNumerically("==", 34.4))
+					Expect(fakeCurrencyConverter.ExchangeArgsForCall(1)).To(BeNumerically("==", 21))
+					Expect(fakeCurrencyConverter.ExchangeArgsForCall(32)).To(BeNumerically("==", 1029))
 				})
 			})
 		})
