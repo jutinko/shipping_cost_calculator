@@ -17,10 +17,10 @@ import (
 func main() {
 	shippingCalculator := &calculator.FiveOneParcelCalculator{}
 
-	dialOption := redis.DialPassword("d7c2b08c-bc18-45d2-b728-d83ef331e72f")
+	envReader := getEnvReader()
 
-	client, err := redis.Dial("tcp", "192.168.8.153:46593", dialOption)
-	// client, err := redis.Dial("tcp", ":6379")
+	dialOption := redis.DialPassword(envReader.GetPassword())
+	client, err := redis.Dial("tcp", envReader.GetHost()+":"+envReader.GetPort(), dialOption)
 	if err != nil {
 		panic(fmt.Errorf("failed to connect to redis: %s", err))
 	}
@@ -28,7 +28,7 @@ func main() {
 	println("Connected to redis")
 
 	productStore := product_store.NewProductStore(client)
-	//initProductStore(productStore)
+	initProductStore(productStore)
 
 	currencyConverter := currency_converter.NewCurrencyConverter("https://api.fixer.io/latest?base=GBP")
 
@@ -49,6 +49,15 @@ func getPort() string {
 	} else {
 		return configuredPort
 	}
+}
+
+func getEnvReader() *utilities.EnvReader {
+	var vcap_services string
+	if vcap_services = os.Getenv("VCAP_SERVICES"); vcap_services == "" {
+		panic("Failed to get environment variable VCAP_SERVICES")
+	}
+	print(vcap_services)
+	return utilities.NewEnvReader([]byte(vcap_services))
 }
 
 func initProductStore(productStore *product_store.ProductStore) {
