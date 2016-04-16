@@ -19,11 +19,14 @@ type EnvReader struct {
 	EnvVars RedisCredentials
 }
 
-func NewEnvReader(jsonData []byte) *EnvReader {
+func NewEnvReader(jsonData []byte) (*EnvReader, error) {
 	var mapping RedisCredentials
-	json.Unmarshal(jsonData, &mapping)
+	err := json.Unmarshal(jsonData, &mapping)
+	if err != nil {
+		return &EnvReader{}, err
+	}
 
-	return &EnvReader{EnvVars: mapping}
+	return &EnvReader{EnvVars: mapping}, nil
 }
 
 func (e *EnvReader) GetHost() string {

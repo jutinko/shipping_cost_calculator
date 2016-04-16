@@ -15,7 +15,7 @@ var _ = Describe("EnvReader", func() {
 
 	BeforeEach(func() {
 		validJson = []byte(`{"p-redis":[{"name":"product-info","label":"p-redis","tags":["pivotal","redis"],"plan":"shared-vm","credentials":{"host":"192.168","password":"iiiiii8c-bc18-j5d2-b728-d83ef331e72f","port":40592}}]}`)
-		envReader = NewEnvReader(validJson)
+		envReader, _ = NewEnvReader(validJson)
 	})
 
 	It("should return the host", func() {
@@ -28,5 +28,18 @@ var _ = Describe("EnvReader", func() {
 
 	It("should return the port", func() {
 		Expect(envReader.GetPort()).To(Equal("40592"))
+	})
+
+	Context("when the json is not valid", func() {
+		var err error
+
+		BeforeEach(func() {
+			validJson = []byte(`p-redis":`)
+			_, err = NewEnvReader(validJson)
+		})
+
+		It("should return an error", func() {
+			Expect(err).To(MatchError(ContainSubstring("invalid character")))
+		})
 	})
 })

@@ -28,7 +28,7 @@ func main() {
 	println("Connected to redis")
 
 	productStore := product_store.NewProductStore(client)
-	initProductStore(productStore)
+	//initProductStore(productStore)
 
 	currencyConverter := currency_converter.NewCurrencyConverter("https://api.fixer.io/latest?base=GBP")
 
@@ -57,23 +57,29 @@ func getEnvReader() *utilities.EnvReader {
 		panic("Failed to get environment variable VCAP_SERVICES")
 	}
 	print(vcap_services)
-	return utilities.NewEnvReader([]byte(vcap_services))
-}
 
-func initProductStore(productStore *product_store.ProductStore) {
-	priceLists := []string{"data/pricesNovember2015.csv", "data/pricesApril2016.csv"}
-	for _, priceList := range priceLists {
-		products, err := utilities.ParseFile(priceList)
-		if err != nil {
-			println(err.Error())
-			os.Exit(1)
-		}
-
-		for _, product := range products {
-			err := productStore.Put(product.Sku, product)
-			if err != nil {
-				panic(fmt.Errorf("Failed to put %#v to store: %s", product, err))
-			}
-		}
+	envReader, err := utilities.NewEnvReader([]byte(vcap_services))
+	if err != nil {
+		panic(fmt.Errorf("Failed to parse the json for envReader: %s", err))
 	}
+
+	return envReader
 }
+
+// func initProductStore(productStore *product_store.ProductStore) {
+// 	priceLists := []string{"data/pricesNovember2015.csv", "data/pricesApril2016.csv"}
+// 	for _, priceList := range priceLists {
+// 		products, err := utilities.ParseFile(priceList)
+// 		if err != nil {
+// 			println(err.Error())
+// 			os.Exit(1)
+// 		}
+
+// 		for _, product := range products {
+// 			err := productStore.Put(product.Sku, product)
+// 			if err != nil {
+// 				panic(fmt.Errorf("Failed to put %#v to store: %s", product, err))
+// 			}
+// 		}
+// 	}
+// }
