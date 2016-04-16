@@ -9,9 +9,15 @@ import (
 	"strings"
 )
 
-func Parse(data string) (*Product, error) {
+type CsvParser struct {
+	SellMargin      float64
+	WholeSellMargin float64
+}
+
+func (c *CsvParser) Parse(data string) (*Product, error) {
 	fields := strings.Split(data, ",")
-	if len(fields) < 6 {
+
+	if len(fields) < 5 {
 		return nil, errors.New(fmt.Sprintf("missing field: %s", data))
 	}
 
@@ -20,19 +26,18 @@ func Parse(data string) (*Product, error) {
 		return nil, err
 	}
 	name := fields[1]
-	wholePrice, err := strconv.ParseFloat(fields[2], 64)
+
+	originalPrice, err := strconv.ParseFloat(fields[2], 64)
 	if err != nil {
 		return nil, err
 	}
-	price, err := strconv.ParseFloat(fields[3], 64)
+
+	weightF, err := strconv.ParseFloat(fields[3], 64)
 	if err != nil {
 		return nil, err
 	}
-	weightF, err := strconv.ParseFloat(fields[4], 64)
-	if err != nil {
-		return nil, err
-	}
-	volumeF, err := strconv.ParseFloat(fields[5], 64)
+
+	volumeF, err := strconv.ParseFloat(fields[4], 64)
 	if err != nil {
 		return nil, err
 	}
@@ -42,12 +47,12 @@ func Parse(data string) (*Product, error) {
 		Name:       name,
 		Weight:     Weight(weightF),
 		Volume:     Volume(volumeF),
-		WholePrice: wholePrice,
-		Price:      price,
+		Price:      originalPrice * c.SellMargin,
+		WholePrice: originalPrice * c.WholeSellMargin,
 	}, nil
 }
 
-func ParseFile(filename string) ([]*Product, error) {
+func (c *CsvParser) ParseFile(filename string) ([]*Product, error) {
 	file, err := os.Open(filename)
 	defer file.Close()
 	if err != nil {
@@ -58,7 +63,7 @@ func ParseFile(filename string) ([]*Product, error) {
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		p, err := Parse(scanner.Text())
+		p, err := c.Parse(scanner.Text())
 		if err != nil {
 			return nil, err
 		}

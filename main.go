@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/gorilla/mux"
@@ -28,7 +29,7 @@ func main() {
 	println("Connected to redis")
 
 	productStore := product_store.NewProductStore(client)
-	//initProductStore(productStore)
+	initProductStore(productStore)
 
 	currencyConverter := currency_converter.NewCurrencyConverter("https://api.fixer.io/latest?base=GBP")
 
@@ -65,20 +66,38 @@ func getEnvReader() *utilities.EnvReader {
 	return envReader
 }
 
-// func initProductStore(productStore *product_store.ProductStore) {
-// 	priceLists := []string{"data/pricesNovember2015.csv", "data/pricesApril2016.csv"}
-// 	for _, priceList := range priceLists {
-// 		products, err := utilities.ParseFile(priceList)
-// 		if err != nil {
-// 			println(err.Error())
-// 			os.Exit(1)
-// 		}
+func initProductStore(productStore *product_store.ProductStore) {
+	priceLists := []string{"data/pricesNovember2015.csv", "data/pricesApril2016.csv"}
 
-// 		for _, product := range products {
-// 			err := productStore.Put(product.Sku, product)
-// 			if err != nil {
-// 				panic(fmt.Errorf("Failed to put %#v to store: %s", product, err))
-// 			}
-// 		}
-// 	}
-// }
+	sellMarginString := os.Getenv("sell_margin")
+	sellMargin, err := strconv.ParseFloat(sellMarginString, 64)
+	if err != nil {
+		panic(fmt.Errorf("Failed to get sellMargin: %s", err))
+	}
+
+	wholeSellMarginString := os.Getenv("whole_sell_margin")
+	wholeSellMargin, err := strconv.ParseFloat(wholeSellMarginString, 64)
+	if err != nil {
+		panic(fmt.Errorf("Failed to get wholeSellMargin: %s", err))
+	}
+
+	parser := &utilities.CsvParser{
+		SellMargin:      sellMargin,
+		WholeSellMargin: wholeSellMargin,
+	}
+
+	for _, priceList := range priceLists {
+		products, err := parser.ParseFile(priceList)
+		if err != nil {
+			println(err.Error())
+			os.Exit(1)
+		}
+
+		for _, product := range products {
+			err := productStore.Put(product.Sku, product)
+			if err != nil {
+				panic(fmt.Errorf("Failed to put %#v to store: %s", product, err))
+			}
+		}
+	}
+}
