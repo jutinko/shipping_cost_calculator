@@ -56,7 +56,6 @@ func getEnvReader() *utilities.EnvReader {
 	if vcap_services = os.Getenv("VCAP_SERVICES"); vcap_services == "" {
 		panic("Failed to get environment variable VCAP_SERVICES")
 	}
-	print(vcap_services)
 
 	envReader, err := utilities.NewEnvReader([]byte(vcap_services))
 	if err != nil {

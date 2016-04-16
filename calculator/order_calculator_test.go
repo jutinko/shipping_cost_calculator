@@ -142,8 +142,7 @@ var _ = Describe("OrderCalculator", func() {
 			}
 
 			expectedPrice := &utilities.FinalPrice{
-				Orders:   fakeOrder,
-				Shipping: 0,
+				Orders: fakeOrder,
 				Price: &utilities.Price{
 					EUR: 1.01,
 					GBP: 2,

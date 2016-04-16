@@ -45,7 +45,6 @@ type Price struct {
 }
 
 type FinalPrice struct {
-	Orders   []*SimpleOrder
-	Shipping float64
-	Price    *Price
+	Orders []*SimpleOrder
+	Price  *Price
 }
