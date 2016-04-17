@@ -3,7 +3,7 @@ package calculator
 import "github.com/jutinko/shipping_cost_calculator/utilities"
 
 // the average shipping price for one kilo
-const shippingPricePerKilo = 1.3
+const shippingPricePerKilo float64 = float64(13) / 3
 const volumetricConversion utilities.Volume = 4000
 
 type FiveOneParcelCalculator struct{}

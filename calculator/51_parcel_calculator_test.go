@@ -19,7 +19,7 @@ var _ = Describe("51_parcel_calculator", func() {
 				parcel = utilities.NewParcel(utilities.Weight(1), utilities.Volume(2*12*24))
 
 				price := calc.Calculate(parcel)
-				Expect(price).Should(BeNumerically("==", 1.3))
+				Expect(price).Should(BeNumerically("~", 4.3333, 0.001))
 			})
 		})
 
@@ -28,7 +28,7 @@ var _ = Describe("51_parcel_calculator", func() {
 				parcel = utilities.NewParcel(utilities.Weight(1), utilities.Volume(62*42*24))
 
 				price := calc.Calculate(parcel)
-				Expect(price).Should(BeNumerically("~", 20.311, 0.001))
+				Expect(price).Should(BeNumerically("~", 67.704, 0.001))
 			})
 		})
 	})
